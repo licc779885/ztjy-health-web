@@ -1,0 +1,46 @@
+.tem-record{
+	margin-top: 20px;
+	.lt-record{
+		background: #fff;
+		display: flex;
+		display: -webkit-flex;
+		justify-content: space-between;
+		align-items: center;
+		padding:20px 40px 20px 30px;
+		position: relative;
+		.lt-imt{
+			display: flex;
+			display: -webkit-flex;
+			align-items: center;
+			color: #333;
+			img{
+				width: 80px;
+				height: 80px;
+				border-radius: 50%;
+				margin-right: 20px;
+			}
+			.lt-name{
+				width: 200px;
+				white-space: nowrap;
+				text-overflow: ellipsis;
+				overflow: hidden;
+			}
+		}
+		.lt-tem{
+			width:120px;
+		}
+	}
+	.lt-record:after{
+		content: ' ';
+		height: 4px;
+		background: #eee;
+		position: absolute;
+		right: 0;
+		left: 30px;
+		bottom: 0;
+		transform: scaleY(0.5);
+	}
+	.lt-record:last-child:after{
+		display: none;
+	}
+}

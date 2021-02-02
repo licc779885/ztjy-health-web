@@ -1,0 +1,134 @@
+html,body,div,span,p,ul,li,ol,table,tr,td{
+	padding: 0;
+	margin: 0;
+  }
+  html,body{
+	  height:100%;
+  }
+  body{
+	  background: #F2F3F5;
+  }
+  ul,li,ol{
+	list-style:none
+  }
+  img{
+	  max-width: 100%;
+  }
+  a{
+	text-decoration:none;
+  }
+  .normal{
+	  color: #26DD4B;
+  }
+  .end{
+	  color: #818D9D;
+  }
+  .c0a{
+	  color: #00AAFF;
+  }
+  .c33{
+	  color: #333;
+  }
+  .c36{
+	  color: #C369ED;
+  }
+  .cbd{
+	  color:#BBBBBD;
+  }
+  .cf9{
+	  color:#FF9700;
+  }
+  .cf5{
+	  color: #FF5E68 ;
+  }
+  .temperature{
+	  font-size:30px;
+	  color: #818D9D;
+	  border-top: 2px solid #eee;
+  }
+  .temperature>div{
+	  background: #fff;
+  }
+  .entry-step,.entry-sum{
+	  text-align: right;
+  }
+  .entry-step button,.entry-step input{
+	  padding: 0;
+	  margin: 0;
+	  width: 70px;
+	  height: 70px;
+	  background: #fff;
+	  border: 2px solid #ccc;
+  }
+  .entry-step input{
+	  width: 140px;
+	  border-left: none;
+	  border-right: none;
+  }
+  .entry-sum{
+	  margin-top: 30px;
+  }
+  .entry-sum button{
+	  width: 130px;
+	  height: 60px;
+	  line-height: 60px;
+	  border: 2px solid #ccc;
+	  padding: 0;
+	  margin: 0;
+	  display: inline-block;
+	  margin-left:20px;
+	  font-size: 28px;
+	  color: #818D9D;
+  }
+  .entry-sum .btn-sum{
+	  background: #00AAFF;
+	  color: #fff;
+	  border-color: #00AAFF;
+  }
+  .ht-list .van-checkbox__icon{
+	  position: absolute;
+	  right:30px;
+	  
+  }
+  .ht-list .van-checkbox__label{
+	  margin-left: 0;
+  }
+  .ht-list .van-checkbox__icon--checked .van-icon{
+	  background-color: #00AAFF;
+	  border-color: #00AAFF;
+  }
+  .tem-top{
+	  height:80px;
+	  padding:0px 26px;
+	  display: flex;
+	  display: -webkit-flex;
+	  justify-content: space-between;
+	  align-items: center;
+	  position: relative;
+  }
+  .tem-top:after,.tem-menu:after{
+	  content: "";
+	  width: 100%;
+	  height:1px;
+	  background:#EEE;
+	  position: absolute;
+	  left: 0;
+	  bottom: 0;
+  }
+  .van-noneText{
+	  width: -webkit-fit-content !important;
+	  width: fit-content !important;
+	  min-width: 192px !important;
+	  min-height: 0 !important;
+	  padding: 0px 24px 16px !important;
+  }
+  .lt-entry .van-stepper__input{
+	  vertical-align: top;
+  }
+  .lt-entry .van-stepper__plus::after{
+	  width: 2px;
+	  height: 24px;
+	  top: 50%;
+	  margin-top: -12px;
+	  transform: scale(.98);
+  }

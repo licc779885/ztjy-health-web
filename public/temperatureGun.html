@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>蓝牙体温枪</title>
+    <script>
+        /* eslint-disable */
+        var bridge = {
+            default: this, call: function (b, a, c) { var e = ""; "function" == typeof a && (c = a, a = {}); a = { data: a }; if ("function" == typeof c) { var g = "dscb" + window.dscb++; window[g] = c; a._dscbstub = g } a = JSON.stringify(a); if (window._dsbridge) e = _dsbridge.call(b, a); else if (window._dswk || -1 != navigator.userAgent.indexOf("_dsbridge")) e = prompt("_dsbridge=" + b, a); return JSON.parse(e || '{}').data }, register: function (b, a, c) {
+                c = c ? window._dsaf : window._dsf; window._dsInit || (window._dsInit = !0, setTimeout(function () { bridge.call("_dsb.dsinit") },
+                    0)); "object" == typeof a ? c._obs[b] = a : c[b] = a
+            }, registerAsyn: function (b, a) { this.register(b, a, !0) }, hasNativeMethod: function (b, a) { return this.call("_dsb.hasNativeMethod", { name: b, type: a || "all" }) }, disableJavascriptDialogBlock: function (b) { this.call("_dsb.disableJavascriptDialogBlock", { disable: !1 !== b }) }
+        };
+        !function () {
+            if (!window._dsf) {
+                var b = {
+                    _dsf: { _obs: {} }, _dsaf: { _obs: {} }, dscb: 0, dsBridge: bridge, close: function () { bridge.call("_dsb.closePage") }, _handleMessageFromNative: function (a) {
+                        var e = JSON.parse(a.data), b = { id: a.callbackId, complete: !0 }, c = this._dsf[a.method], d = this._dsaf[a.method], h = function (a, c) { b.data = a.apply(c, e); bridge.call("_dsb.returnValue", b) }, k = function (a, c) { e.push(function (a, c) { b.data = a; b.complete = !1 !== c; bridge.call("_dsb.returnValue", b) }); a.apply(c, e) }; if (c) h(c, this._dsf); else if (d) k(d, this._dsaf);
+                        else if (c = a.method.split("."), !(2 > c.length)) { a = c.pop(); var c = c.join("."), d = this._dsf._obs, d = d[c] || {}, f = d[a]; f && "function" == typeof f ? h(f, d) : (d = this._dsaf._obs, d = d[c] || {}, (f = d[a]) && "function" == typeof f && k(f, d)) }
+                    }
+                }, a; for (a in b) window[a] = b[a]; bridge.register("_hasJavascriptMethod", function (a, b) { b = a.split("."); if (2 > b.length) return !(!_dsf[b] && !_dsaf[b]); a = b.pop(); b = b.join("."); return (b = _dsf._obs[b] || _dsaf._obs[b]) && !!b[a] })
+            }
+        }();
+    </script>
+    <script>
+        /* eslint-disable */
+        /**
+         * Created by yangyiming
+         * Created at 2020/05/07  
+         */
+        // 厂商列表
+        var parseTemperature = (function () {
+        var factoryList = [
+            {
+                "name":"倍尔康",
+                "id":"1001",
+                "iOS":{
+                    "serverUUID":"FE18",
+                    "writeUUID":"FE11",
+                    "readUUID":"FE10"
+                },
+                "android":{
+                    "serverUUID":"0000fe18-0000-1000-8000-00805f9b34fb",
+                    "writeUUID":"0000fe11-0000-1000-8000-00805f9b34fb",
+                    "readUUID":"0000fe10-0000-1000-8000-00805f9b34fb",
+                    "descriptorUUID":"00002902-0000-1000-8000-00805f9b34fb"
+                },
+            },
+            {
+                "name":"爱立康",
+                "id":"1002",
+                "iOS":{
+                    "serverUUID":"FFF0",
+                    "writeUUID":"FFF4",
+                    "readUUID":"FFF3"
+
+                },
+                "android":{
+                    "serverUUID":"0000fff0-0000-1000-8000-00805f9b34fb",
+                    "writeUUID":"0000fff4-0000-1000-8000-00805f9b34fb",
+                    "readUUID":"0000fff3-0000-1000-8000-00805f9b34fb",
+                    "descriptorUUID":"00002902-0000-1000-8000-00805f9b34fb"
+                },
+            }
+        ]
+            /**
+             * 0xfa200a57016d01260100000100eeff
+             * 倍尔康体温枪解析
+             */
+            var parseUtils = (function () {
+                var TAG = "ParseUtils";
+                var voice1, mode1, unit1, surface, body, room;
+                var temperature = ''
+                function parseBRKReceiveData(str) {
+            
+                    // (?<=0x).*(?=ff)
+                    var code = str.replace('0x','')
+                    var data = []
+                    // 两两截取
+                    while (code.length > 0) {
+                        data.push(code[0] + code[1])
+                        code = code.substring(2)
+                    }
+                    var check = checksum(data);
+                    if (!check) {
+                        return '';
+                    }
+
+                    var command = parseInt(data[1]);
+                   
+                    switch (command) {
+                        case 13:
+                            //切换声音
+                            if (data.length < 6) {
+                                return;
+                            }
+                            voice1 = byteToInt(data[3]) + "";
+                            break;
+                        case 11:
+                            //切换单位和模式
+                            if (data.length < 7) {
+                                return;
+                            }
+                            mode1 = byteToInt(data[3]) + "";
+                            unit1 = byteToInt(data[4]) + "";
+                            break;
+                        case 20:
+                            //测量结果
+                            if (data.length < 15) {
+                                return;
+                            }
+                            surface = (byteToInt(data[4]) * 256 + byteToInt(data[3])) / 10;
+                            body = (byteToInt(data[6]) * 256 + byteToInt(data[5])) / 10;
+                            room = (byteToInt(data[8]) * 256 + byteToInt(data[7])) / 10;
+
+                            //测量值有误放弃改组数据
+                            if (surface < 0 || body < 0 || room < 0) {
+                                return;
+                            }
+
+                            var mode = byteToInt(data[9]);
+                            var unit = byteToInt(data[10]);
+                            //                String voice = byteToInt(data[11]) + "";
+                            // TemperatureBean receiveData = new TemperatureBean();
+                            switch (mode) {
+                                case 0:
+                                    temperature = body
+                                    break;
+                                case 1:
+                                    temperature = surface
+                                    break;
+                                case 2:
+                                    temperature = room
+                                    break;
+                            }
+                            // if (unit !== 0) {
+                            //     temperature = C2W(temperature)
+                            // }
+                            break;
+                    }
+                    return temperature
+                }
+                /**
+                 * 校验数据是否正常
+                 *
+                 * @param data
+                 * @return
+                 */
+                function checksum(data) {
+
+                    //长度小于5位丢弃
+                    if (data.length < 5) {
+                        return false;
+                    }
+
+                    //校验长度为0,默认成功
+                    if (byteToInt(data[2]) == 0) {
+                        return true;
+                    }
+
+                    var sum = 0;
+                    for (var i = 0; i < data.length; i++) {
+                        if (i > 2 && i < data.length - 2) {
+                            sum = sum + byteToInt(data[i]);
+                        }
+                    }
+
+                    //内容累加等于校验码,则成功
+                    var check = byteToInt(data[data.length - 2]);
+                    sum = sum % 256;
+                    if (sum == check) {
+                        return true;
+                    }
+                    return false;
+                }
+
+                function byteToInt(b) {
+                    //Java 总是把 byte 当做有符处理；我们可以通过将其和 0xFF 进行二进制与得到它的无符值
+                    return Number('0x' + b)
+                }
+
+                /**
+                 * 华氏温度转摄氏温度
+                 *
+                 * @param tW 华氏温度
+                 * @return 摄氏温度
+                 */
+                function W2C(tW) {
+                    return (tW - 32) * 5.0 / 9;
+                }
+
+                /**
+                 * 摄氏温度转华氏温度
+                 *
+                 * @param tC 摄氏温度
+                 * @return 华氏温度
+                 */
+                function C2W(tC) {
+                    return tC * 1.8 + 32;
+                }
+
+                return {
+                    factoryList:factoryList,
+                    parseBRKReceiveData: parseBRKReceiveData
+                }
+
+            })()
+
+
+            /**
+             * 爱立康体温枪解析 
+             * ffff04fff7faffff00245610a6
+             * 整数部位是24
+             * 小数部分是56
+             */
+
+            var alkAnalysis = function (data) {
+                data = data.replace('0x','')
+                var a = Number('0x' + data.substring(18, 20))
+                var b = Number(parseInt(Number('0x' + data.substring(20, 22))/100*10)/10)
+                var temperature = a+b
+                var astr = data.substring(18, 20)
+                var bstr = data.substring(20, 22)
+                 // 低温和高温指令处理
+                if(astr == 'e0'){
+                    temperature = 32
+                }else if(astr == 'f0'){
+                    temperature = 42.2
+                }
+                return temperature
+            }
+
+
+            // 配置解析列表
+            var factoryListParseConfg = {
+                '1001': parseUtils.parseBRKReceiveData,
+                '1002': alkAnalysis
+            }
+
+            /**
+             * 判断体温枪是否支持当前厂商
+             */
+            var judgeFactor = function (id) {
+                // 10000 表示成功
+                var code = 10000
+                var message = '成功'
+                var isDevice = false
+                for (var x = 0; x <= factoryList.length - 1; x++) {
+                    // 判断是否存在厂商id
+                    if (parseInt(factoryList[x].id) === id) {
+                        isDevice = true
+                    }
+                }
+                if (!isDevice) {
+                    code = 404
+                    message = '不支持此设备'
+                }
+                var isDeviceParse = false
+                for (var x in factoryListParseConfg) {
+                    if (parseInt(x) === id) {
+                        isDeviceParse = true
+                    }
+                }
+                if (!isDeviceParse) {
+                    code = 404
+                    message = '没有可用的解析函数'
+                }
+                return {
+                    code: code,
+                    message: message
+                }
+            }
+
+
+            var parse = function (id, str) {
+                var res = judgeFactor(parseInt(id))
+          
+                var temperature = ''
+                if (res.code === 10000) {
+                    temperature = factoryListParseConfg[id](str)
+                }
+                return temperature
+            }
+            return {
+                factoryList:factoryList,
+                parse: parse
+            }
+            
+        })()
+
+        // var tem = parseTemperature.parse(1001, '0xfa200a57016d012a0100010100f3ff')
+
+        var namespace = bridge.call('getNameSpace') || ''
+
+
+        callJsGetTemperatureFactoryList()
+
+
+        callJsParserTemperature()
+
+        callJsApplicationOpenSettingsURLString()
+
+        callJsGetBluetoothFilterConfigure()
+
+        /**
+         * 原生调用h5接口
+         * 获取厂家列表
+         *   [
+                 {
+                    "name":"倍尔康",
+                    "id":"1001",
+                    "serverUUID":"FE18",
+                    "writeUUID":"FE11",
+                    "readUUID":"FE10"
+                },
+                {
+                    //...
+                }
+            ]
+        */
+      
+        function callJsGetTemperatureFactoryList() {
+            var factoryList = parseTemperature.factoryList
+            bridge.register(namespace + '.callJsGetTemperatureFactoryList', function(){
+                var data = {
+                    code: 10000,
+                    message: '成功',
+                    body: {
+                        factoryList:factoryList
+                    }
+                }
+                return data
+            })
+        }
+
+        /**
+         * 原生调用h5接口
+         * 解释温度
+         * @param 入参
+         *      id":"1001",设备ID
+         *      "originalString":"0xfa1008180134011201010062ff" 体温枪传回的温度编码
+         * @returns "temperature":"36.5"
+         */
+        function callJsParserTemperature() {
+            bridge.register(namespace + '.callJsParserTemperature', function(param){
+                // var param = '{"id":"1002","originalString":"0x0000000000000000"}'
+                var res = JSON.parse(param)
+                var temperature = parseTemperature.parse(res.id, res.originalString)
+                if(temperature){
+                    // 保留一位小数
+                    temperature = parseInt(Number(temperature)*10)/10
+                    temperature = temperature.toFixed(1)
+                }
+                var data = {
+                    code: 10000,
+                    message: '成功',
+                    body: {
+                        temperature: temperature
+                    }
+                }
+                if (!temperature) {
+                    data = {
+                        code: 404,
+                        message: '',
+                        body: {
+                            temperature: ''
+                        }
+                    }
+                }
+                 // 贝尔康需要做特殊处理
+                 if(parseInt(res.id) === 1001){
+                    var code = res.originalString.replace('0x','')
+                    var arr = []
+                    // 两两截取
+                    while (code.length > 0) {
+                        arr.push(code[0] + code[1])
+                        code = code.substring(2)
+                    }
+                    if(parseInt(arr[1]) === 10){
+                        data = {
+                            code: 405,
+                            message: '',
+                            body: {
+                                temperature: ''
+                            }   
+                        }
+                    }
+                }
+                
+                // 爱立康0x00000000 格式需要做特殊处理
+                if(parseInt(res.id) === 1002){
+                    if(!Number(res.originalString)){
+                        data = {
+                            code: 405,
+                            message: '',
+                            body: {
+                                temperature: ''
+                            }   
+                        }
+                    }
+                }
+
+                
+                
+                return data
+            })
+        }
+
+        /**
+         * 呼叫原生向体温枪发出指令
+         * @param deviceId:设备id
+         * @returns
+         *  returnCode:"10000",
+            returnString:"0xfa1008180134011201010062ff"
+        */
+        function callNativeSendOrder(data, callback) {
+            bridge.call(namespace + '.callNativeSendOrder', JSON.stringify({
+                deviceId: data.deviceId,
+                orderString: data.orderString
+            }), function(data){
+                if (callback) {
+                    callback(data)
+                }
+            })
+        }
+
+        /**
+         * 获取跳转到系统蓝牙页面设置的js回调(ios)
+         * 大于等于10版本:App-Prefs:root=Bluetooth 小于:prefs:root=Bluetooth
+         */
+        function callJsApplicationOpenSettingsURLString(){
+            bridge.register(namespace + '.callJsApplicationOpenSettingsURLString',function(param){
+                // var param = '{"systemVersion":"9.0"}'
+                var res = JSON.parse(param)
+                var systemVersion = parseInt(res.systemVersion)
+                var data = {
+                        code: 10000,
+                        message: '成功',
+                        body: {
+                            openSettingsURLString: ''
+                        }   
+                }
+                if(systemVersion >= 10){
+                    data.body.openSettingsURLString = 'App-Prefs:root=Bluetooth'
+                }else{
+                    data.body.openSettingsURLString = 'prefs:root=Bluetooth'
+                }
+                return data
+            })
+        }
+
+
+        //  获取蓝牙名称过滤列表
+        function callJsGetBluetoothFilterConfigure(){
+            bridge.register(namespace + '.callJsGetBluetoothFilterConfigure',function(param){
+                // var param = '{"systemVersion":"9.0"}'
+                var data = {
+                        code: 10000,
+                        message: '成功',
+                        body: {
+                            isFilter:true,
+                            nameList:[
+                                {
+                                    name:"AET",
+                                    isSupport: true,
+                                    versionTips: "APP版本过低,连接失败,请升级APP!"
+                                },
+                                {
+                                    name: "JXB",
+                                    isSupport:true,
+                                    versionTips: "APP版本过低，连接失败,请升级APP！"
+                                }
+                            ]
+                        }   
+                }
+                return data
+            })
+        }
+    </script>
+</head>
+
+<body>
+
+</body>
+
+</html>

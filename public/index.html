@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <link rel="icon" href="<%= BASE_URL %>favicon.ico">
+    <title><%= webpackConfig.name %></title>
+    <script>
+      /**
+       * 骨架图配置
+       * key: 骨架图html名字
+       * value: 对应vue的url路径
+       */
+      window.skeletonConfig = {
+        collect:'/temperature/collect'
+      }
+    </script>
+  </head>
+  <body>
+    <noscript>
+      <strong>We're sorry but <%= webpackConfig.name %> doesn't work properly without JavaScript enabled. Please enable it to continue.</strong>
+    </noscript>
+    <!-- <iframe src="" frameborder="0" width="100%" height="100%" style="position: fixed;z-index: 999;background: #fff;" id="skeleton"></iframe> -->
+    <div id="app"></div>
+    <script>
+        // 获取url路径信息
+        // var pathName = window.location.pathname
+        // var skeletonHtml = '/skeleton/'
+        // for(var x in window.skeletonConfig){
+        //   if(pathName.indexOf(window.skeletonConfig[x])!==-1){
+        //     skeletonHtml += x+'.html'
+        //   }
+        // }
+        // document.getElementById('skeleton').src=skeletonHtml
+        // window.onload=function(){
+        //   document.getElementById('app').style.visibility = 'visible'
+        //   document.getElementById('skeleton').style.display = 'none'
+        // }
+      </script>
+    <!-- built files will be auto injected -->
+  </body>
+  
+</html>
